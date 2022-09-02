@@ -1,0 +1,138 @@
+<html>
+
+<head>
+    <title>Laderaumauslastung</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" href="css/vehicles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
+        crossorigin="anonymous"></script>
+    <script language="javascript" type="text/javascript" src="javascript/rest.js"></script>
+    <script language="javascript" type="text/javascript" src="javascript/table.js"></script>
+    <script language="javascript" type="text/javascript" src="javascript/filter.js"></script>
+
+</head>
+
+<body>
+    <div id="filterDiv">
+        <input type="text" id="vehicleId" placeholder="Fahrzeugkennung" />
+        <input type="text" id="loadingTime" placeholder="Beladezeit" />
+        <input type="text" id="dischargeTime" placeholder="Entladezeit" />
+        <input type="text" id="loadFactor" placeholder="Auslastung" />
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="freeCapacity">
+            <label class="form-check-label" for="freeCapacity">Freie Kapazität</label>
+        </div>
+        <input type="submit" id="filterButton" value="Filter anwenden" onclick="filter();" class="btn btn-primary" />
+        <input type="submit" id="filterButton" value="Filter verwerfen" onclick="resetFilter();"
+            class="btn btn-secondary" />
+
+    </div>
+
+    <table id="table" class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Fahrzeugkennung</th>
+                <th>Beladezeit</th>
+                <th>Entladezeit</th>
+                <th>Auslastung</th>
+                <th>Freie Kapazität</th>
+                <th>Optionen</th>
+            </tr>
+        </thead>
+        <tbody> </tbody>
+    </table>
+
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#vehicleEditModal"
+        onclick="prepareModal(false, 'Neues Fahrzeug erstellen');">
+        Neues Fahrzeug hinzufügen
+    </button>
+
+    <div class="modal fade" id="vehicleEditModal" tabindex="-1" aria-labelledby="vehicleEditModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vehicleEditModalLabel">Neues Fahrzeug erstellen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        onclick="resetCreateEditModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <b>Fahrzeug </b>
+                    <input type="hidden" id="vehicleRawIdCreate" />
+                    <input type="text" id="vehicleIdCreate" placeholder="Fahrzeugkennung" />
+                    <input type="text" id="loadingTimeCreate" placeholder="Beladezeit" />
+                    <input type="text" id="dischargeTimeCreate" placeholder="Entladezeit" />
+                    <input type="text" id="loadFactorCreate" placeholder="Auslastung" />
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="blockedCreate">
+                        <label class="form-check-label" for="blockedCreate">Gesperrt?</label>
+                    </div>
+                    <hr />
+                    <b> Stauraum </b>
+                    <input type="text" id="heightCreate" placeholder="Höhe" />
+                    <input type="text" id="widthCreate" placeholder="Breite" />
+                    <input type="text" id="depthCreate" placeholder="Tiefe" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        onclick="resetCreateEditModal()">Schließen</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVehicle()">Speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        let isModalInEditMode = false;
+
+        const saveVehicle = () => {
+            const vehicle = {
+                vehicleId: document.getElementById("vehicleIdCreate").value,
+                loadingTime: document.getElementById("loadingTimeCreate").value,
+                dischargeTime: document.getElementById("dischargeTimeCreate").value,
+                loadFactor: document.getElementById("loadFactorCreate").value,
+                blocked: document.getElementById("blockedCreate").checked,
+                storage: {
+                    height: document.getElementById("heightCreate").value,
+                    width: document.getElementById("widthCreate").value,
+                    depth: document.getElementById("depthCreate").value
+                }
+            };
+
+            const method = isModalInEditMode ? "PUT" : "POST"
+            const id = document.getElementById("vehicleRawIdCreate");
+
+            doCallWithBody("http://localhost:8080/vehicles/" + id.value, vehicle, method)
+                .then(fillTableWithAll)
+                .then(() => $('#vehicleEditModal').modal('hide'))
+                .catch(console.log);
+            resetCreateEditModal();
+        }
+
+        const resetCreateEditModal = () => {
+            document.getElementById("vehicleIdCreate").value = "";
+            document.getElementById("loadingTimeCreate").value = "";
+            document.getElementById("dischargeTimeCreate").value = "";
+            document.getElementById("loadFactorCreate").value = "";
+            document.getElementById("blockedCreate").checked = false;
+
+            document.getElementById("heightCreate").value = ""
+            document.getElementById("widthCreate").value = ""
+            document.getElementById("depthCreate").value = ""
+            document.getElementById("vehicleRawIdCreate").value = "";
+        }
+
+        const prepareModal = (editMode, headline) => {
+            isModalInEditMode = editMode; 
+            document.getElementById("vehicleEditModalLabel").innerHTML = headline;
+        }
+
+        fillTableWithAll();
+    </script>
+</body>
+
+</html>
