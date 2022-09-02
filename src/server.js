@@ -4,7 +4,7 @@ const path = require('node:path');
 
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.get('/index.html', (_req, res) =>
+app.get('/', (_req, res) =>
     res.sendFile('public/views/index.html', {
         root: path.dirname(__dirname)
     }));

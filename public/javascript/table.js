@@ -42,17 +42,8 @@ const loadTable = (vehicles) => {
 
         const deleteButton = createButton("bi-trash", () => {
             doDeleteCall(vehicle._links.self.href)
-                .then(() => {
-                    doGetCall("http://localhost:8080/vehicles/")
-                        .then(vehicles => {
-                            if (jQuery.isEmptyObject(vehicles)) {
-                                return Promise.resolve([]);
-                            }
-                            return Promise.resolve(vehicles._embedded.vehicleResponseList);
-                        })
-                        .then(loadTable)
-                        .catch(console.log);
-                }).catch(console.log);
+                .then(resetFilter)
+                .catch(console.log);
         });
 
         buttonContainer.appendChild(deleteButton);
@@ -80,7 +71,12 @@ const createButton = (iconClass, callback) => {
 
 const fillTableWithAll = () => {
     doGetCall("http://localhost:8080/vehicles/")
-        .then(json => json._embedded.vehicleResponseList)
+        .then(vehicles => {
+            if (jQuery.isEmptyObject(vehicles)) {
+                return Promise.resolve([]);
+            }
+            return Promise.resolve(vehicles._embedded.vehicleResponseList);
+        })
         .then(loadTable)
         .catch(console.log);
 }

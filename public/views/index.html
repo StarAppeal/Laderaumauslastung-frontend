@@ -107,7 +107,7 @@
             const id = document.getElementById("vehicleRawIdCreate");
 
             doCallWithBody("http://localhost:8080/vehicles/" + id.value, vehicle, method)
-                .then(fillTableWithAll)
+                .then(resetFilter)
                 .then(() => $('#vehicleEditModal').modal('hide'))
                 .catch(console.log);
             resetCreateEditModal();
